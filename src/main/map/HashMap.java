@@ -64,90 +64,26 @@ public class HashMap<K, V> implements Map<K, V> {
 
   @Override
   public boolean put(K key, V value) {
-    if (key == null || value == null) {
-      throw new IllegalArgumentException();
-    }
-    int i = indexFor(key);
-    int firstTombstone = -1;
-    while (slots[i] != null) {
-      if (slots[i].deleted) {
-        if (firstTombstone == -1) {
-          firstTombstone = i;  // remember the first tombstone on the path
-        }
-      } else if (slots[i].key.equals(key)) {
-        slots[i].value = value;  // key already present; update its value
-        return false;
-      }
-      i = (i + 1) % slots.length;  // another key or a tombstone; step to the next slot
-    }
-    if (firstTombstone != -1) {
-      i = firstTombstone;  // the key is new; reuse the tombstone, not the empty slot
-    } else {
-      used++;              // filling an empty slot; one more slot is now in use
-    }
-    slots[i] = new Entry<>(key, value);
-    size++;
-    if (used > slots.length / 2) {           // more than half the slots are in use
-      if (size > slots.length / 2) {         // the live entries passed the threshold: grow
-        int capacity;
-        if (primeIndex + 1 < PRIMES.length) {
-          capacity = PRIMES[++primeIndex];   // the next prime
-        } else {
-          capacity = 2 * slots.length + 1;   // past the table: double and add one
-        }
-        rehash(capacity);
-      } else {                               // tombstones pushed used past half: clean at the same size
-        rehash(slots.length);
-      }
-    }
-    return true;
+    // TODO: Implement me
+    throw new UnsupportedOperationException("TODO: Implement me");
   }
 
   @Override
   public V get(K key) {
-    if (key == null) {
-      throw new IllegalArgumentException();
-    }
-    int i = indexFor(key);
-    while (slots[i] != null) {
-      if (!slots[i].deleted && slots[i].key.equals(key)) {
-        return slots[i].value;  // found the key
-      }
-      i = (i + 1) % slots.length;  // another key or a tombstone; keep probing
-    }
-    return null;  // reached an empty slot; the key is not present
+    // TODO: Implement me
+    throw new UnsupportedOperationException("TODO: Implement me");
   }
 
   @Override
   public boolean containsKey(K key) {
-    if (key == null) {
-      throw new IllegalArgumentException();
-    }
-    int i = indexFor(key);
-    while (slots[i] != null) {
-      if (!slots[i].deleted && slots[i].key.equals(key)) {
-        return true;
-      }
-      i = (i + 1) % slots.length;  // another key or a tombstone; keep probing
-    }
-    return false;
+    // TODO: Implement me
+    throw new UnsupportedOperationException("TODO: Implement me");
   }
 
   @Override
   public boolean remove(K key) {
-    if (key == null) {
-      throw new IllegalArgumentException();
-    }
-    int i = indexFor(key);
-    while (slots[i] != null) {
-      if (!slots[i].deleted && slots[i].key.equals(key)) {
-        slots[i].deleted = true;  // leave a tombstone instead of emptying the slot
-        size--;
-        return true;
-      }
-      i = (i + 1) % slots.length;
-    }
-    return false;  // reached an empty slot; the key was not there
+    // TODO: Implement me
+    throw new UnsupportedOperationException("TODO: Implement me");
   }
 
   // Rebuilds the table into a fresh array of the given capacity, moving every
@@ -155,21 +91,8 @@ public class HashMap<K, V> implements Map<K, V> {
   // here: put sets it before a growing rehash, and a same-size clean keeps it.
   @SuppressWarnings("unchecked")
   private void rehash(int capacity) {
-    Entry<K, V>[] old = slots;
-    slots = (Entry<K, V>[]) new Entry[capacity];
-    size = 0;
-    used = 0;
-    for (Entry<K, V> e : old) {
-      if (e != null && !e.deleted) {      // skip empty slots and tombstones
-        int i = Math.floorMod(e.key.hashCode(), capacity);
-        while (slots[i] != null) {        // probe to the first open slot
-          i = (i + 1) % capacity;
-        }
-        slots[i] = e;                     // reuse the entry
-        size++;
-        used++;
-      }
-    }
+    // TODO: Implement me
+    throw new UnsupportedOperationException("TODO: Implement me");
   }
 
   @Override
