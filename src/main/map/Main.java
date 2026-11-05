@@ -36,13 +36,13 @@ public final class Main {
     // A key that was never put is not in the map.
     System.out.println("has fox? " + counts.containsKey("fox")); // false
 
-    // The map is Iterable<K>, so the enhanced for loop walks the keys.
+    // The map is Iterable<K>, so the enhanced for loop traverses the keys.
     System.out.println("keys:");
     for (String key : counts) {
       System.out.println("  " + key);
     }
 
-    // entries() walks the pairs.
+    // entries() traverses the pairs.
     System.out.println("key -> count:");
     for (Map.Entry<String, Integer> entry : counts.entries()) {
       System.out.println("  " + entry.key() + " -> " + entry.value());
