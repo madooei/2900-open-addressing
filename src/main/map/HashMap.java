@@ -64,11 +64,10 @@ public class HashMap<K, V> implements Map<K, V> {
     return Math.floorMod(key.hashCode(), slots.length);
   }
 
-  @Override
-  public boolean put(K key, V value) {
-    if (key == null || value == null) {
-      throw new IllegalArgumentException();
-    }
+  // Returns the slot of the key's live entry if the key is present. Otherwise
+  // returns the slot where a new key goes: the first tombstone on the probe path,
+  // or the empty slot that ends it.
+  private int probe(K key) {
     int i = indexFor(key);
     int firstTombstone = -1;
     while (slots[i] != null) {
@@ -77,32 +76,56 @@ public class HashMap<K, V> implements Map<K, V> {
           firstTombstone = i;  // remember the first tombstone on the path
         }
       } else if (slots[i].key.equals(key)) {
-        slots[i].value = value;  // key already present; update its value
-        return false;
+        return i;  // found the key
       }
-      i = (i + 1) % slots.length;  // another key or a tombstone; step to the next slot
+      i = (i + 1) % slots.length;  // another key or a tombstone; keep probing
     }
     if (firstTombstone != -1) {
-      i = firstTombstone;  // the key is new; reuse the tombstone, not the empty slot
-    } else {
-      used++;              // filling an empty slot; one more slot is now in use
+      return firstTombstone;  // the key is new; reuse the tombstone, not the empty slot
+    }
+    return i;
+  }
+
+  // Returns true if slot i holds a live entry with the given key.
+  private boolean holdsKey(int i, K key) {
+    return slots[i] != null && !slots[i].deleted && slots[i].key.equals(key);
+  }
+
+  @Override
+  public boolean put(K key, V value) {
+    if (key == null || value == null) {
+      throw new IllegalArgumentException();
+    }
+    int i = probe(key);
+    if (holdsKey(i, key)) {
+      slots[i].value = value;  // key present; replace its value
+      return false;
+    }
+    if (slots[i] == null) {
+      used++;  // filling an empty slot; one more slot is now in use
     }
     slots[i] = new Entry<>(key, value);
     size++;
-    if (used > MAX_LOAD_FACTOR * slots.length) {    // more than half the slots are in use
-      if (size > MAX_LOAD_FACTOR * slots.length) {  // the live entries passed the threshold: grow
+    rehashIfNeeded();
+    return true;
+  }
+
+  // Rehashes once more than half the slots are in use: grows when the live
+  // entries passed half, and cleans at the same size when the tombstones did.
+  private void rehashIfNeeded() {
+    if (used > MAX_LOAD_FACTOR * slots.length) {
+      if (size > MAX_LOAD_FACTOR * slots.length) {
         int capacity;
         if (primeIndex + 1 < PRIMES.length) {
-          capacity = PRIMES[++primeIndex];   // the next prime
+          capacity = PRIMES[++primeIndex];  // the next prime
         } else {
-          capacity = 2 * slots.length + 1;   // past the array: double and add one
+          capacity = 2 * slots.length + 1;  // past the array: double and add one
         }
         rehash(capacity);
-      } else {                               // tombstones pushed used past half: clean at the same size
+      } else {
         rehash(slots.length);
       }
     }
-    return true;
   }
 
   @Override
@@ -110,14 +133,11 @@ public class HashMap<K, V> implements Map<K, V> {
     if (key == null) {
       throw new IllegalArgumentException();
     }
-    int i = indexFor(key);
-    while (slots[i] != null) {
-      if (!slots[i].deleted && slots[i].key.equals(key)) {
-        return slots[i].value;  // found the key
-      }
-      i = (i + 1) % slots.length;  // another key or a tombstone; keep probing
+    int i = probe(key);
+    if (holdsKey(i, key)) {
+      return slots[i].value;
     }
-    return null;  // reached an empty slot; the key is not present
+    return null;
   }
 
   @Override
@@ -125,14 +145,7 @@ public class HashMap<K, V> implements Map<K, V> {
     if (key == null) {
       throw new IllegalArgumentException();
     }
-    int i = indexFor(key);
-    while (slots[i] != null) {
-      if (!slots[i].deleted && slots[i].key.equals(key)) {
-        return true;
-      }
-      i = (i + 1) % slots.length;  // another key or a tombstone; keep probing
-    }
-    return false;
+    return holdsKey(probe(key), key);
   }
 
   @Override
@@ -140,33 +153,26 @@ public class HashMap<K, V> implements Map<K, V> {
     if (key == null) {
       throw new IllegalArgumentException();
     }
-    int i = indexFor(key);
-    while (slots[i] != null) {
-      if (!slots[i].deleted && slots[i].key.equals(key)) {
-        slots[i].deleted = true;  // leave a tombstone instead of emptying the slot
-        size--;
-        return true;
-      }
-      i = (i + 1) % slots.length;
+    int i = probe(key);
+    if (holdsKey(i, key)) {
+      slots[i].deleted = true;  // leave a tombstone instead of emptying the slot
+      size--;
+      return true;
     }
-    return false;  // reached an empty slot; the key was not there
+    return false;
   }
 
   // Rebuilds the table into a fresh array of the given capacity, moving every
   // live entry and leaving the tombstones behind. primeIndex is not changed
-  // here: put sets it before a growing rehash, and a same-size clean keeps it.
+  // here: rehashIfNeeded sets it before a growing rehash, and a same-size clean keeps it.
   @SuppressWarnings("unchecked")
   private void rehash(int capacity) {
     Entry<K, V>[] old = slots;
     slots = (Entry<K, V>[]) new Entry[capacity];
     used = 0;
     for (Entry<K, V> e : old) {
-      if (e != null && !e.deleted) {      // skip empty slots and tombstones
-        int i = indexFor(e.key);          // slots is the new array, so this is the new home slot
-        while (slots[i] != null) {        // probe to the first open slot
-          i = (i + 1) % slots.length;
-        }
-        slots[i] = e;                     // reuse the entry
+      if (e != null && !e.deleted) {  // skip empty slots and tombstones
+        slots[probe(e.key)] = e;      // the first empty slot on e's path
         used++;
       }
     }
