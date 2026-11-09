@@ -22,6 +22,8 @@ public class HashMap<K, V> implements Map<K, V> {
       10949, 21911, 43853, 87719, 175447, 350899, 701819, 1403641
   };
 
+  private static final double MAX_LOAD_FACTOR = 0.5;
+
   private static class Entry<K, V> implements Map.Entry<K, V> {
     K key;
     V value;
@@ -87,13 +89,13 @@ public class HashMap<K, V> implements Map<K, V> {
     }
     slots[i] = new Entry<>(key, value);
     size++;
-    if (used > slots.length / 2) {           // more than half the slots are in use
-      if (size > slots.length / 2) {         // the live entries passed the threshold: grow
+    if (used > MAX_LOAD_FACTOR * slots.length) {    // more than half the slots are in use
+      if (size > MAX_LOAD_FACTOR * slots.length) {  // the live entries passed the threshold: grow
         int capacity;
         if (primeIndex + 1 < PRIMES.length) {
           capacity = PRIMES[++primeIndex];   // the next prime
         } else {
-          capacity = 2 * slots.length + 1;   // past the table: double and add one
+          capacity = 2 * slots.length + 1;   // past the array: double and add one
         }
         rehash(capacity);
       } else {                               // tombstones pushed used past half: clean at the same size
@@ -157,16 +159,14 @@ public class HashMap<K, V> implements Map<K, V> {
   private void rehash(int capacity) {
     Entry<K, V>[] old = slots;
     slots = (Entry<K, V>[]) new Entry[capacity];
-    size = 0;
     used = 0;
     for (Entry<K, V> e : old) {
       if (e != null && !e.deleted) {      // skip empty slots and tombstones
-        int i = Math.floorMod(e.key.hashCode(), capacity);
+        int i = indexFor(e.key);          // slots is the new array, so this is the new home slot
         while (slots[i] != null) {        // probe to the first open slot
-          i = (i + 1) % capacity;
+          i = (i + 1) % slots.length;
         }
         slots[i] = e;                     // reuse the entry
-        size++;
         used++;
       }
     }
@@ -182,35 +182,23 @@ public class HashMap<K, V> implements Map<K, V> {
     return new Entries();
   }
 
-  // Traverses the slots array, returning the key of each live entry and skipping
-  // empty slots and tombstones.
+  // Returns the key of each entry, using an EntryIterator for the traversal.
   private class KeyIterator implements Iterator<K> {
-    private int slot = 0;  // the next slot to examine
+    private Iterator<Map.Entry<K, V>> entries;  // the traversal this iterator takes its keys from
 
     KeyIterator() {
-      advance();  // position slot on the first live entry, if there is one
-    }
-
-    private void advance() {
-      while (slot < slots.length && (slots[slot] == null || slots[slot].deleted)) {
-        slot++;  // skip empty slots and tombstones
-      }
+      entries = new EntryIterator();
     }
 
     @Override
     public boolean hasNext() {
-      return slot < slots.length;
+      return entries.hasNext();
     }
 
     @Override
     public K next() {
-      if (!hasNext()) {
-        throw new NoSuchElementException();
-      }
-      K key = slots[slot].key;
-      slot++;
-      advance();
-      return key;
+      Map.Entry<K, V> entry = entries.next();
+      return entry.key();
     }
   }
 
