@@ -1,7 +1,6 @@
 package map;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 /**
  * A hash table implementation of the Map ADT, with open addressing and linear
@@ -138,32 +137,27 @@ public class HashMap<K, V> implements Map<K, V> {
   // Traverses the slots array, returning each live entry and skipping empty slots
   // and tombstones.
   private class EntryIterator implements Iterator<Map.Entry<K, V>> {
-    private int slot = 0;  // the next slot to examine
 
     EntryIterator() {
-      advance();  // position slot on the first live entry, if there is one
+      // TODO: Implement me
+      throw new UnsupportedOperationException("TODO: Implement me");
     }
 
     private void advance() {
-      while (slot < slots.length && (slots[slot] == null || slots[slot].deleted)) {
-        slot++;  // skip empty slots and tombstones
-      }
+      // TODO: Implement me
+      throw new UnsupportedOperationException("TODO: Implement me");
     }
 
     @Override
     public boolean hasNext() {
-      return slot < slots.length;
+      // TODO: Implement me
+      throw new UnsupportedOperationException("TODO: Implement me");
     }
 
     @Override
     public Map.Entry<K, V> next() {
-      if (!hasNext()) {
-        throw new NoSuchElementException();
-      }
-      Entry<K, V> entry = slots[slot];
-      slot++;
-      advance();
-      return entry;
+      // TODO: Implement me
+      throw new UnsupportedOperationException("TODO: Implement me");
     }
   }
 }
