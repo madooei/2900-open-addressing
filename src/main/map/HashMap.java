@@ -64,8 +64,29 @@ public class HashMap<K, V> implements Map<K, V> {
     return Math.floorMod(key.hashCode(), slots.length);
   }
 
+  // Returns the slot of the key's live entry if the key is present. Otherwise
+  // returns the slot where a new key goes: the first tombstone on the probe path,
+  // or the empty slot that ends it.
+  private int probe(K key) {
+    // TODO: Implement me
+    throw new UnsupportedOperationException("TODO: Implement me");
+  }
+
+  // Returns true if slot i holds a live entry with the given key.
+  private boolean holdsKey(int i, K key) {
+    // TODO: Implement me
+    throw new UnsupportedOperationException("TODO: Implement me");
+  }
+
   @Override
   public boolean put(K key, V value) {
+    // TODO: Implement me
+    throw new UnsupportedOperationException("TODO: Implement me");
+  }
+
+  // Rehashes once more than half the slots are in use: grows when the live
+  // entries passed half, and cleans at the same size when the tombstones did.
+  private void rehashIfNeeded() {
     // TODO: Implement me
     throw new UnsupportedOperationException("TODO: Implement me");
   }
@@ -90,7 +111,7 @@ public class HashMap<K, V> implements Map<K, V> {
 
   // Rebuilds the table into a fresh array of the given capacity, moving every
   // live entry and leaving the tombstones behind. primeIndex is not changed
-  // here: put sets it before a growing rehash, and a same-size clean keeps it.
+  // here: rehashIfNeeded sets it before a growing rehash, and a same-size clean keeps it.
   @SuppressWarnings("unchecked")
   private void rehash(int capacity) {
     // TODO: Implement me
