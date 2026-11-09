@@ -22,6 +22,8 @@ public class HashMap<K, V> implements Map<K, V> {
       10949, 21911, 43853, 87719, 175447, 350899, 701819, 1403641
   };
 
+  private static final double MAX_LOAD_FACTOR = 0.5;
+
   private static class Entry<K, V> implements Map.Entry<K, V> {
     K key;
     V value;
@@ -105,35 +107,23 @@ public class HashMap<K, V> implements Map<K, V> {
     return new Entries();
   }
 
-  // Traverses the slots array, returning the key of each live entry and skipping
-  // empty slots and tombstones.
+  // Returns the key of each entry, using an EntryIterator for the traversal.
   private class KeyIterator implements Iterator<K> {
-    private int slot = 0;  // the next slot to examine
+    private Iterator<Map.Entry<K, V>> entries;  // the traversal this iterator takes its keys from
 
     KeyIterator() {
-      advance();  // position slot on the first live entry, if there is one
-    }
-
-    private void advance() {
-      while (slot < slots.length && (slots[slot] == null || slots[slot].deleted)) {
-        slot++;  // skip empty slots and tombstones
-      }
+      entries = new EntryIterator();
     }
 
     @Override
     public boolean hasNext() {
-      return slot < slots.length;
+      return entries.hasNext();
     }
 
     @Override
     public K next() {
-      if (!hasNext()) {
-        throw new NoSuchElementException();
-      }
-      K key = slots[slot].key;
-      slot++;
-      advance();
-      return key;
+      Map.Entry<K, V> entry = entries.next();
+      return entry.key();
     }
   }
 

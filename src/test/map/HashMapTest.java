@@ -3,16 +3,14 @@ package map;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Runs the Map contract suite against HashMap, then reads the private slots
- * array by reflection to check the slots the notes draw: the linear probe, the
- * tombstones, and the two kinds of rehash.
- */
+/** Runs the Map contract suite against HashMap. */
 public class HashMapTest extends MapTest {
 
   @Override
@@ -69,6 +67,14 @@ public class HashMapTest extends MapTest {
   }
 
   @Test
+  public void containsKeyFindsAKeyThatProbed() {
+    HashMap<String, Integer> table = new HashMap<>();
+    table.put("bee", 40);
+    table.put("pig", 50);
+    assertTrue(table.containsKey("pig"));
+  }
+
+  @Test
   public void removeLeavesATombstone() {
     HashMap<String, Integer> table = new HashMap<>();
     table.put("bee", 40);
@@ -106,12 +112,33 @@ public class HashMapTest extends MapTest {
   }
 
   @Test
+  public void removeDoesNotMatchATombstone() {
+    HashMap<String, Integer> table = new HashMap<>();
+    table.put("bee", 40);
+    table.put("pig", 50);
+    table.remove("bee");
+    assertFalse(table.remove("bee"));
+  }
+
+  @Test
   public void putReusesTheFirstTombstone() {
     HashMap<String, Integer> table = new HashMap<>();
     table.put("bee", 40);
     table.put("pig", 50);
     table.put("hen", 60);
     table.remove("bee");
+    table.put("rat", 70);
+    assertEquals("rat", keyAt(table, 5));
+  }
+
+  @Test
+  public void putReusesTheFirstOfTwoTombstones() {
+    HashMap<String, Integer> table = new HashMap<>();
+    table.put("bee", 40);
+    table.put("pig", 50);
+    table.put("hen", 60);
+    table.remove("bee");
+    table.remove("pig");
     table.put("rat", 70);
     assertEquals("rat", keyAt(table, 5));
   }
@@ -215,6 +242,17 @@ public class HashMapTest extends MapTest {
   public void cleanPutsTheLiveKeyInItsHomeSlot() {
     HashMap<String, Integer> table = tableAfterTombstoneClean();
     assertEquals("cat", keyAt(table, 3));
+  }
+
+  @Test
+  public void halfTheSlotsLiveCleansAtTheSameSize() {
+    HashMap<String, Integer> table = new HashMap<>();
+    table.put("cat", 10);
+    table.put("bee", 40);
+    table.put("pig", 50);
+    table.remove("cat");
+    table.put("hen", 60);
+    assertEquals(7, slotsOf(table).length);
   }
 
   @Test
