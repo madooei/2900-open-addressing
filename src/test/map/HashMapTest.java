@@ -32,6 +32,13 @@ public class HashMapTest extends MapTest {
   }
 
   @Test
+  public void negativeHashCodeLandsInSlotRange() {
+    HashMap<String, Integer> table = new HashMap<>();
+    table.put("elephant", 1);  // hashCode -5491951, and floorMod(-5491951, 7) is 4
+    assertEquals("elephant", keyAt(table, 4));
+  }
+
+  @Test
   public void collidingKeyProbesToTheNextSlot() {
     HashMap<String, Integer> table = new HashMap<>();
     table.put("bee", 40);
@@ -242,6 +249,24 @@ public class HashMapTest extends MapTest {
   public void cleanPutsTheLiveKeyInItsHomeSlot() {
     HashMap<String, Integer> table = tableAfterTombstoneClean();
     assertEquals("cat", keyAt(table, 3));
+  }
+
+  @Test
+  public void growingAfterACleanGoesToTheNextPrime() {
+    HashMap<String, Integer> table = tableAfterTombstoneClean();
+    table.put("bee", 40);
+    table.put("pig", 50);
+    table.put("hen", 60);
+    assertEquals(17, slotsOf(table).length);
+  }
+
+  @Test
+  public void growingPastTheLastPrimeDoublesAndAddsOne() {
+    HashMap<String, Integer> table = new HashMap<>();
+    for (int i = 1; i <= 701821; i++) {  // the first count above 0.5 * 1403641
+      table.put("k" + i, i);
+    }
+    assertEquals(2 * 1403641 + 1, slotsOf(table).length);
   }
 
   @Test

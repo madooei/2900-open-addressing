@@ -1,6 +1,6 @@
 # Open Addressing
 
-A hash table that resolves collisions by open addressing: `HashMap` keeps every entry in one array of slots, probes forward one slot at a time from a key's home slot, leaves a tombstone when it removes a key, and rehashes when more than half the slots are in use, growing to the next prime or cleaning at the same size. A JUnit suite checks the `Map` contract, then reads the slots through reflection to check the slots the notes draw.
+A hash table that resolves collisions by open addressing: `HashMap` keeps every entry in one array of slots, probes forward one slot at a time from a key's home slot, leaves a tombstone when it removes a key, and rehashes when more than half the slots are in use, growing to the next prime or cleaning at the same size. `HashSet` applies the same strategy to the Set ADT. JUnit suites check the `Map` and `Set` contracts, then read the slots through reflection to check the slots the notes draw.
 
 ## Prerequisites
 
@@ -20,12 +20,19 @@ code/
       map/
         Map.java                        # the Map ADT
         HashMap.java                    # open addressing with linear probing and tombstones
+      set/
+        Set.java                        # the Set ADT
+        HashSet.java                    # the same hash table, holding elements instead of pairs
       demo/                             # one demo per class you implement
         HashMapDemo.java
+        HashSetDemo.java
     test/
       map/
         MapTest.java                    # the Map contract suite
         HashMapTest.java                # the contract, plus the slots by reflection
+      set/
+        SetTest.java                    # the Set contract suite
+        HashSetTest.java                # the contract, plus the slots by reflection
   scripts/
     run.sh                              # compile and run one demo
     test.sh                             # compile and run the JUnit tests
@@ -41,6 +48,10 @@ code/
 
 - `map.Map<K, V>` — the Map ADT, copied unchanged from the earlier chapters.
 - `map.HashMap<K, V>` — the open-addressed hash table: `put`, `get`, `containsKey`, `remove`, `size`, and iteration over the keys and the entries.
+- `set.Set<T>` — the Set ADT, copied unchanged from the earlier chapters.
+- `set.HashSet<T>` — a hash set built the same way as `HashMap`: one array of slots, linear probing, tombstones, and the same rehash. It has `add`, `remove`, `contains`, `size`, and `iterator()`. The notes do not show this code; it applies the chapter's open addressing to the Set ADT.
 - `map.MapTest` — the Map contract suite from the map chapter.
 - `map.HashMapTest` — runs the contract suite against `HashMap`, then reads the slots through reflection to check the probe, the tombstones, and the rehash.
+- `set.SetTest` and `set.HashSetTest` — the Set contract suite, run against `HashSet`, then the same slot checks as `HashMapTest`.
 - `demo.HashMapDemo` — puts, looks up, overwrites, and removes the keys from the chapter's trace, then iterates.
+- `demo.HashSetDemo` — adds, finds, and removes the same keys in a `HashSet`, as elements, then iterates.
